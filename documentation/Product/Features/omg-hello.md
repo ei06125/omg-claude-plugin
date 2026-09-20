@@ -1,6 +1,6 @@
 # omg-hello
 
-- **Status:** In development, awaiting owner acceptance
+- **Status:** Accepted
 - **Executable spec:** `tests/acceptance/features/omg-hello.feature`
 - **Implementation:** `.claude/skills/hello/SKILL.md`
 
@@ -53,5 +53,5 @@ tools/ci-local.sh                # the GitLab CI jobs, locally
 
 Done by the owner only: review the feature and check the CI result. The author does not tick these.
 
-- [ ] CI is green
-- [ ] Feature review passed
+- [x] CI is green
+- [x] Feature review passed

@@ -53,6 +53,28 @@ uv run pytest                  # scenarios that need no claude CLI; same as the 
 uv run pytest -m claude_cli    # scenarios that need an authenticated claude CLI and make real model calls
 ```
 
+## Releases
+
+Versions and tags are automated without pushing to `main` (see the
+[omg-release](documentation/Product/Features/omg-release.md) spec and
+[ADR-0002](documentation/Technical/ADR-0002-version-bumps-from-accepted-feature-specs.md)):
+
+1. After a merge to `main`, the `Release` workflow runs the tests, then works out the next version from what
+   changed since the latest tag: a feature spec becoming `Accepted` is MINOR, a change to shipped content is
+   PATCH.
+2. It opens a `release/vX.Y.Z` pull request. Its checks wait for your approval: approve the workflow runs, add
+   the `Approved` label, review, and merge.
+3. The next push to `main` creates the annotated tag `vX.Y.Z` and starts the `Release tag` workflow.
+
+```bash
+uv run python tools/release.py next               # the next version, or nothing
+uv run python tools/release.py publish --dry-run  # what the release job would do
+```
+
+Until the baseline tag `v0.1.0` exists, and while "Allow GitHub Actions to create and approve pull requests" is
+off in the repository settings, the release job ends with a warning (exit code 78) instead of failing. The setup
+steps are in the spec.
+
 ## Tooling and secrets detection
 
 Dev tooling is managed with `uv` (`pyproject.toml`, `uv.lock`). One-time setup:
