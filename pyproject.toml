@@ -18,6 +18,7 @@ package = false
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["tools", "tests"]
 bdd_features_base_dir = "tests/acceptance/features"
 addopts = "-m 'not claude_cli'"
 markers = ["claude_cli: needs an authenticated claude CLI and makes real model calls; not run in CI"]
