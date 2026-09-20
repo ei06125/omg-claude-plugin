@@ -1,5 +1,10 @@
 # omg
 
+[![Security](https://github.com/ei06125/omg-claude-plugin/actions/workflows/security.yml/badge.svg)](https://github.com/ei06125/omg-claude-plugin/actions/workflows/security.yml)
+[![Quality](https://github.com/ei06125/omg-claude-plugin/actions/workflows/quality.yml/badge.svg)](https://github.com/ei06125/omg-claude-plugin/actions/workflows/quality.yml)
+[![Tests](https://github.com/ei06125/omg-claude-plugin/actions/workflows/tests.yml/badge.svg)](https://github.com/ei06125/omg-claude-plugin/actions/workflows/tests.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 Claude Code plugin for the OhMyGod (omg) dev ecosystem.
 
 ## Layout
@@ -44,7 +49,7 @@ Run the tests. Features are specified in `documentation/Product/Features/` and e
 scenarios in `tests/acceptance/`:
 
 ```bash
-uv run pytest                  # scenarios that need no claude CLI; same as the CI `tests` job
+uv run pytest                  # scenarios that need no claude CLI; same as the CI test job
 uv run pytest -m claude_cli    # scenarios that need an authenticated claude CLI and make real model calls
 ```
 
@@ -60,11 +65,16 @@ uv run pre-commit install
 Layers, all using `.gitleaks.toml` as the single rule set:
 
 - pre-commit: `gitleaks` on staged changes, `detect-private-key`, `uv-lock` (keeps `uv.lock` in sync).
-- GitLab CI (`.gitlab-ci.yml`): `gitleaks` job scans full history; `pre-commit` job runs the
-  remaining hooks (`SKIP=gitleaks`); `tests` job runs `uv run pytest`. The uv image is pinned once, in
-  the hidden `.uv` job.
+- GitHub Actions (`.github/workflows/`): separate security, quality, and test workflows run for pull
+  requests and pushes to `main`. Gitleaks scans the complete history; quality runs the remaining
+  pre-commit hooks; tests runs `uv run pytest`.
+- GitLab CI (`.gitlab-ci.yml`) retains equivalent jobs for the private downstream repository.
 - `.gitleaks.toml` extends the default rules with `omg-pat-assignment`, which catches hardcoded
   `*_PAT` values that the default generic rule misses.
+
+Pull requests are assigned to their authors and labeled from changed paths. Merging requires an
+`Approved` label after the `Approved label` status check is configured as required in the `main`
+ruleset.
 
 Run everything manually:
 
@@ -89,11 +99,13 @@ which serves the same digest as `ghcr.io/astral-sh/uv`.
 Versions are pinned by immutable hash, with the human-readable tag kept next to it:
 
 - pre-commit `rev:` is a commit SHA with a `# frozen: <tag>` comment.
+- GitHub Actions use full commit SHAs with version comments.
 - CI images are `image:<tag>@sha256:<index digest>`.
 - Python dependencies are hash-locked in `uv.lock`.
 
-Bump `gitleaks` in three places together: `.pre-commit-config.yaml`, `.gitlab-ci.yml`, local install.
-The same goes for `uv`: local install, the `uv-pre-commit` rev, and the CI image.
+Bump Gitleaks together in `.pre-commit-config.yaml`, `.github/workflows/security.yml`, the GitLab
+security job, and the local installation. Keep the local uv installation, `uv-pre-commit` revision,
+GitHub setup action configuration, and GitLab CI image compatible.
 
 Resolve new pins:
 
