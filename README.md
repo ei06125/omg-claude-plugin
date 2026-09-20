@@ -9,7 +9,7 @@ Claude Code plugin for the OhMyGod (omg) dev ecosystem.
 
 ## Layout
 
-```
+```text
 .claude-plugin/plugin.json   plugin manifest (points into .claude/)
 .claude/                     Claude Code only: agents/, skills/, commands/, hooks/
 .agents/                     shared across agents: policies, standards, procedures, rules, guidelines

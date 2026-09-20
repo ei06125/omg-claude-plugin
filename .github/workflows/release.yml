@@ -73,7 +73,8 @@ jobs:
             --remote "https://x-access-token@github.com/${GITHUB_REPOSITORY}.git" \
             --target main || code=$?
           if [ "$code" -eq 78 ]; then
-            echo "::warning title=Release automation is not configured::See the setup section of documentation/Product/Features/omg-release.md"
+            echo "::warning title=Release automation is not configured::See the setup section of" \
+              "documentation/Product/Features/omg-release.md"
             exit 0
           fi
           exit "$code"

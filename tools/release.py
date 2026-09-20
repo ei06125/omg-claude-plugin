@@ -36,7 +36,9 @@ VERSION_RE = re.compile(r"^(\d+)\.(\d+)\.(\d+)$")
 TAG_RE = re.compile(r"^v(\d+\.\d+\.\d+)$")
 RELEASE_BRANCH_RE = re.compile(r"^release/v\d+\.\d+\.\d+$")
 STATUS_RE = re.compile(r"^- \*\*Status:\*\*[ \t]*(.+?)[ \t]*$", re.MULTILINE)
-BREAKING_RE = re.compile(r"^- \*\*Breaking:\*\*[ \t]*yes\b", re.MULTILINE | re.IGNORECASE)
+BREAKING_RE = re.compile(
+    r"^- \*\*Breaking:\*\*[ \t]*yes\b", re.MULTILINE | re.IGNORECASE
+)
 VERSION_LINE_RE = re.compile(r'^([ \t]*"version"[ \t]*:[ \t]*)"[^"]*"', re.MULTILINE)
 STATUSES = ("accepted", "in development", "draft")
 
@@ -90,11 +92,17 @@ class GitHubApi:
             except ValueError:
                 return error.code, None
         except OSError as error:
-            raise ReleaseError(f"could not reach the GitHub API: {redact(str(error))}") from None
+            raise ReleaseError(
+                f"could not reach the GitHub API: {redact(str(error))}"
+            ) from None
 
     def fail(self, action, status, payload):
         detail = payload.get("message", "") if isinstance(payload, dict) else ""
-        raise ReleaseError(f"GitHub API call to {action} failed with {status}: {redact(detail)}".rstrip(": "))
+        raise ReleaseError(
+            f"GitHub API call to {action} failed with {status}: {redact(detail)}".rstrip(
+                ": "
+            )
+        )
 
     def open_release_pull_requests(self):
         status, payload = self.request("GET", "/pulls?state=open&per_page=100")
@@ -103,11 +111,14 @@ class GitHubApi:
         return {
             pr["head"]["ref"]: pr["number"]
             for pr in payload
-            if RELEASE_BRANCH_RE.match(pr["head"]["ref"]) and pr["head"].get("repo", {}).get("full_name") == self.repo
+            if RELEASE_BRANCH_RE.match(pr["head"]["ref"])
+            and pr["head"].get("repo", {}).get("full_name") == self.repo
         }
 
     def create_pull_request(self, head, base, title, body):
-        status, payload = self.request("POST", "/pulls", {"head": head, "base": base, "title": title, "body": body})
+        status, payload = self.request(
+            "POST", "/pulls", {"head": head, "base": base, "title": title, "body": body}
+        )
         if status == 201:
             return payload["number"]
         if status == 403:
@@ -118,7 +129,9 @@ class GitHubApi:
         self.fail("create the pull request", status, payload)
 
     def close_pull_request(self, number, comment):
-        status, payload = self.request("POST", f"/issues/{number}/comments", {"body": comment})
+        status, payload = self.request(
+            "POST", f"/issues/{number}/comments", {"body": comment}
+        )
         if status != 201:
             self.fail("comment on the pull request", status, payload)
         status, payload = self.request("PATCH", f"/pulls/{number}", {"state": "closed"})
@@ -189,27 +202,41 @@ def manifest_version(repo, rev):
 
 def latest_tag(repo, head="HEAD"):
     tags = git(repo, "tag", "--list", "v*", "--merged", head).split()
-    versions = [(parse_version(m.group(1)), tag) for tag in tags if (m := TAG_RE.match(tag))]
+    versions = [
+        (parse_version(m.group(1)), tag) for tag in tags if (m := TAG_RE.match(tag))
+    ]
     return max(versions)[1] if versions else None
 
 
 def specs_at(repo, rev):
     names = git(repo, "ls-tree", "-r", "--name-only", rev, "--", SPEC_DIR).splitlines()
-    return {name: git(repo, "show", f"{rev}:{name}") for name in names if name.endswith(".md")}
+    return {
+        name: git(repo, "show", f"{rev}:{name}")
+        for name in names
+        if name.endswith(".md")
+    }
 
 
 def next_version(repo, base_tag=None, head="HEAD"):
     base_tag = base_tag or latest_tag(repo, head)
     if base_tag is None:
-        raise NotConfigured("no baseline release tag: create an annotated tag vX.Y.Z on main first")
+        raise NotConfigured(
+            "no baseline release tag: create an annotated tag vX.Y.Z on main first"
+        )
     base = base_tag[1:]
     before, after = specs_at(repo, base_tag), specs_at(repo, head)
     accepted = any(
-        spec_status(text) == "accepted" and spec_status(before.get(name, "")) != "accepted"
+        spec_status(text) == "accepted"
+        and spec_status(before.get(name, "")) != "accepted"
         for name, text in after.items()
     )
-    breaking = any(is_breaking(text) and not is_breaking(before.get(name, "")) for name, text in after.items())
-    changed = git(repo, "diff", "--name-only", "--no-renames", base_tag, head).splitlines()
+    breaking = any(
+        is_breaking(text) and not is_breaking(before.get(name, ""))
+        for name, text in after.items()
+    )
+    changed = git(
+        repo, "diff", "--name-only", "--no-renames", base_tag, head
+    ).splitlines()
     shipped = any(path.startswith(SHIPPED) for path in changed)
     if breaking:
         kind = "major" if parse_version(base)[0] >= 1 else "minor"
@@ -247,10 +274,14 @@ def release_commit(repo, manifest_text, message):
         env = {"GIT_INDEX_FILE": str(Path(directory) / "index"), **BOT_IDENTITY}
         mode = git(repo, "ls-tree", "HEAD", MANIFEST).split()[0]
         git(repo, "read-tree", "HEAD", env=env)
-        blob = git(repo, "hash-object", "-w", "--stdin", input_text=manifest_text, env=env).strip()
+        blob = git(
+            repo, "hash-object", "-w", "--stdin", input_text=manifest_text, env=env
+        ).strip()
         git(repo, "update-index", "--cacheinfo", f"{mode},{blob},{MANIFEST}", env=env)
         tree = git(repo, "write-tree", env=env).strip()
-        return git(repo, "commit-tree", tree, "-p", "HEAD", "-m", message, env=env).strip()
+        return git(
+            repo, "commit-tree", tree, "-p", "HEAD", "-m", message, env=env
+        ).strip()
 
 
 def tag_release(repo, remote, version, token, dry_run, out):
@@ -269,20 +300,30 @@ def tag_release(repo, remote, version, token, dry_run, out):
     return tag
 
 
-def propose_release(repo, remote, target, base, version, kind, token, dry_run, out, api):
+def propose_release(
+    repo, remote, target, base, version, kind, token, dry_run, out, api
+):
     branch = f"release/v{version}"
     title = f"chore(release): v{version}"
     with remote_env(remote, token) as env:
         refs = remote_refs(repo, remote, "refs/heads/release/v*", env, "heads")
-        existing = sorted(n for n in (ref.removeprefix("refs/heads/") for ref in refs) if RELEASE_BRANCH_RE.match(n))
+        existing = sorted(
+            n
+            for n in (ref.removeprefix("refs/heads/") for ref in refs)
+            if RELEASE_BRANCH_RE.match(n)
+        )
         if dry_run:
-            out(f"Would push {branch} with one commit '{title}' and open a pull request into {target}.")
+            out(
+                f"Would push {branch} with one commit '{title}' and open a pull request into {target}."
+            )
             for name in existing:
                 if name != branch:
                     out(f"Would close the superseded {name} and delete its branch.")
             return
         if api is None:
-            raise NotConfigured("no GitHub repository given: pass --github-repo or set GITHUB_REPOSITORY")
+            raise NotConfigured(
+                "no GitHub repository given: pass --github-repo or set GITHUB_REPOSITORY"
+            )
         open_prs = api.open_release_pull_requests()
         if branch not in existing:
             text = bump_manifest_text(git(repo, "show", f"HEAD:{MANIFEST}"), version)
@@ -313,14 +354,18 @@ def report_tag(env, tag):
             handle.write(f"tag={tag}\n")
 
 
-def publish(repo, remote="origin", target="main", dry_run=False, env=None, out=emit, api=None):
+def publish(
+    repo, remote="origin", target="main", dry_run=False, env=None, out=emit, api=None
+):
     env = os.environ if env is None else env
     token = env.get("RELEASE_TOKEN", "")
     if token:
         _secrets.add(token)
     base = latest_tag(repo)
     if base is None:
-        raise NotConfigured("no baseline release tag: create an annotated tag vX.Y.Z on main first")
+        raise NotConfigured(
+            "no baseline release tag: create an annotated tag vX.Y.Z on main first"
+        )
     if not dry_run and not token:
         raise NotConfigured("RELEASE_TOKEN is not set")
     version = manifest_version(repo, "HEAD")
@@ -332,7 +377,9 @@ def publish(repo, remote="origin", target="main", dry_run=False, env=None, out=e
     if result is None:
         out(f"No releasable changes since {base}.")
         return None
-    return propose_release(repo, remote, target, base, result[0], result[1], token, dry_run, out, api)
+    return propose_release(
+        repo, remote, target, base, result[0], result[1], token, dry_run, out, api
+    )
 
 
 def verify_tag(repo, tag, main_ref="origin/main"):
@@ -345,14 +392,22 @@ def verify_tag(repo, tag, main_ref="origin/main"):
     commit = git(repo, "rev-list", "-n", "1", ref).strip()
     version = manifest_version(repo, commit)
     if version != match.group(1):
-        raise ReleaseError(f"{tag} does not match the plugin version {version!r} at that commit")
-    on_main = subprocess.run(["git", "merge-base", "--is-ancestor", commit, main_ref], cwd=repo, capture_output=True)
+        raise ReleaseError(
+            f"{tag} does not match the plugin version {version!r} at that commit"
+        )
+    on_main = subprocess.run(
+        ["git", "merge-base", "--is-ancestor", commit, main_ref],
+        cwd=repo,
+        capture_output=True,
+    )
     if on_main.returncode != 0:
         raise ReleaseError(f"the tagged commit is not on {main_ref}")
 
 
 def build_parser():
-    parser = argparse.ArgumentParser(prog="release.py", description=__doc__.splitlines()[0])
+    parser = argparse.ArgumentParser(
+        prog="release.py", description=__doc__.splitlines()[0]
+    )
     commands = parser.add_subparsers(dest="command", required=True)
     for name in ("next", "publish", "verify-tag"):
         command = commands.add_parser(name)
@@ -361,8 +416,13 @@ def build_parser():
             command.add_argument("--remote", default="origin")
             command.add_argument("--target", default="main")
             command.add_argument("--dry-run", action="store_true")
-            command.add_argument("--github-repo", help="owner/name; defaults to GITHUB_REPOSITORY")
-            command.add_argument("--api-url", help="GitHub API URL; defaults to GITHUB_API_URL or api.github.com")
+            command.add_argument(
+                "--github-repo", help="owner/name; defaults to GITHUB_REPOSITORY"
+            )
+            command.add_argument(
+                "--api-url",
+                help="GitHub API URL; defaults to GITHUB_API_URL or api.github.com",
+            )
         if name == "verify-tag":
             command.add_argument("tag", nargs="?")
             command.add_argument("--main-ref", default="origin/main")
@@ -380,13 +440,22 @@ def main(argv=None, env=None):
         elif args.command == "publish":
             slug = args.github_repo or env.get("GITHUB_REPOSITORY", "")
             token = env.get("RELEASE_TOKEN", "")
-            api = GitHubApi(args.api_url or env.get("GITHUB_API_URL") or API_URL, slug, token) if slug and token else None
+            api = (
+                GitHubApi(
+                    args.api_url or env.get("GITHUB_API_URL") or API_URL, slug, token
+                )
+                if slug and token
+                else None
+            )
             publish(args.repo, args.remote, args.target, args.dry_run, env, api=api)
         else:
             verify_tag(args.repo, args.tag or "", args.main_ref)
             emit(f"{args.tag} is a valid release tag.")
     except NotConfigured as error:
-        print(f"release automation is not configured: {redact(str(error))}", file=sys.stderr)
+        print(
+            f"release automation is not configured: {redact(str(error))}",
+            file=sys.stderr,
+        )
         return EX_CONFIG
     except (ReleaseError, ValueError) as error:
         print(f"error: {redact(str(error))}", file=sys.stderr)
