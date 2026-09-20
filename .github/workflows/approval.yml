@@ -1,0 +1,24 @@
+name: Approval
+
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize, labeled, unlabeled]
+
+permissions:
+  contents: read
+
+jobs:
+  approved-label:
+    name: Approved label
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require Approved label
+        env:
+          LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+        run: |
+          set -euo pipefail
+
+          jq --exit-status 'index("Approved") != null' <<<"$LABELS" >/dev/null || {
+            echo "Add the Approved label before merging."
+            exit 1
+          }
