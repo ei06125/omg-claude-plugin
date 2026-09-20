@@ -20,6 +20,7 @@ MANIFEST_TEXT = """{
 }
 """
 
+
 def clean_env(**extra):
     """Environment for running the release script: nothing inherited from the CI job.
 
