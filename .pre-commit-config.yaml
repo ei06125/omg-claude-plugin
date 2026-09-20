@@ -1,0 +1,21 @@
+default_language_version:
+  python: python3
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: 3e8a8703264a2f4a69428a0aa4dcb512790b2c8c # frozen: v6.0.0
+    hooks:
+      - id: detect-private-key
+        name: Detect private keys (SSH/PGP/RSA)
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: 83d9cd684c87d95d656c1458ef04895a7f1cbd8e # frozen: v8.30.1
+    hooks:
+      - id: gitleaks
+        name: Gitleaks - secret detection
+
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: 36bed8143874b34d77931e1236de048cf551e940 # frozen: 0.11.30
+    hooks:
+      - id: uv-lock
+        name: Keep uv.lock in sync with pyproject.toml

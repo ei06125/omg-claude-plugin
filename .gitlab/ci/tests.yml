@@ -1,0 +1,5 @@
+tests:
+  extends: .uv
+  script:
+    - uv sync --locked
+    - uv run pytest

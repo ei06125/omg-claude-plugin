@@ -1,0 +1,7 @@
+include:
+  - local: /.gitlab/ci/pipeline.yml
+  - local: /.gitlab/ci/defaults.yml
+  - local: /.gitlab/ci/approval.yml
+  - local: /.gitlab/ci/security.yml
+  - local: /.gitlab/ci/quality.yml
+  - local: /.gitlab/ci/tests.yml

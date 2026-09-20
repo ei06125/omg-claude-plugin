@@ -1,0 +1,9 @@
+.DS_Store
+*.bak
+.claude/settings.local.json
+.cache/
+.venv/
+.gitlab-ci-local/
+__pycache__/
+.pytest_cache/
+gitleaks-report.json

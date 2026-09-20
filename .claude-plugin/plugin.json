@@ -1,0 +1,20 @@
+{
+  "name": "omg",
+  "version": "0.1.0",
+  "description": "OhMyGod dev ecosystem for Claude Code: leadership agents, domain skills, and shortcuts.",
+  "author": {
+    "name": "Pedro Oliveira",
+    "email": "ei06125@pm.me"
+  },
+  "homepage": "https://github.com/ei06125/omg-claude-plugin",
+  "repository": "https://github.com/ei06125/omg-claude-plugin",
+  "keywords": [
+    "omg",
+    "dev-toolkit",
+    "agents",
+    "skills"
+  ],
+  "skills": "./.claude/skills/",
+  "commands": "./.claude/commands/",
+  "license": "MIT"
+}

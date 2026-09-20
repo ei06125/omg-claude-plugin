@@ -1,0 +1,14 @@
+title = "omg-claude-plugin gitleaks config"
+
+[extend]
+useDefault = true
+
+# The default generic rule only fires on names containing key/token/secret/etc.
+# Names ending in _PAT (AHA_PAT, CONFLUENCE_PAT, GITHUB_PAT, ...) slip through.
+[[rules]]
+id = "omg-pat-assignment"
+description = "Hardcoded value assigned to a *_PAT variable"
+regex = '''(?i)\b[a-z0-9_]*_pat\b["']?\s*[:=]\s*["']?([a-z0-9_\-\.=/+]{16,})["']?'''
+secretGroup = 1
+entropy = 3.0
+keywords = ["_pat"]

@@ -1,0 +1,17 @@
+stages:
+  - approval
+  - verify
+
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+      when: never
+    - if: $CI_COMMIT_BRANCH
+
+variables:
+  APPROVAL_USERNAME: "ei06125"
+  GIT_DEPTH: "0"
+  PRE_COMMIT_HOME: ${CI_PROJECT_DIR}/.cache/pre-commit
+  UV_CACHE_DIR: ${CI_PROJECT_DIR}/.cache/uv
+  UV_LINK_MODE: copy

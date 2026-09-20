@@ -1,0 +1,11 @@
+.uv:
+  stage: verify
+  image: astral/uv:0.11.30-python3.13-trixie@sha256:eb310ae7cf416b9c4728ce7c60b9d2dd99ae66808e2d08356b928edec9ec2e39
+  cache:
+    key:
+      files:
+        - uv.lock
+        - .pre-commit-config.yaml
+    paths:
+      - .cache/uv
+      - .cache/pre-commit

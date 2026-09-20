@@ -1,0 +1,7 @@
+pre-commit:
+  extends: .uv
+  variables:
+    SKIP: gitleaks # covered by the dedicated gitleaks job
+  script:
+    - uv sync --locked
+    - uv run pre-commit run --all-files --show-diff-on-failure
