@@ -1,0 +1,64 @@
+{
+  "image": "docker.io/docker/sandbox-templates:opencode@sha256:88a078fc021d0a2b4c3315f21a6f05dfdda5a6b30369a53d185b5b6544465efc",
+  "limits": {
+    "cpus": 2,
+    "memory_mib": 2048,
+    "timeout_seconds": {
+      "default": 1800,
+      "maximum": 7200
+    }
+  },
+  "forbidden_paths": [
+    "$HOME/.ssh",
+    "$HOME/.aws",
+    "$HOME/.gnupg",
+    "$HOME/.docker",
+    "$HOME/.kube",
+    "$HOME/.config/gh",
+    "$HOME/.netrc",
+    "$HOME/.npmrc",
+    "$HOME/Library/Keychains",
+    "$HOME/Library/Application Support/com.docker.sandboxes",
+    "/var/run/docker.sock"
+  ],
+  "forbidden_hosts": [
+    "api.openai.com",
+    "*.openai.com",
+    "openai.com",
+    "chatgpt.com",
+    "api.anthropic.com",
+    "*.anthropic.com",
+    "claude.ai",
+    "api.github.com",
+    "github.com",
+    "*.githubusercontent.com",
+    "*.githubcopilot.com",
+    "copilot.github.com",
+    "*.googleapis.com",
+    "api.groq.com",
+    "api.x.ai",
+    "openrouter.ai"
+  ],
+  "canary_host": "example.com:443",
+  "backends": {
+    "ollama": {
+      "endpoint": "host.docker.internal:11434",
+      "probe_url": "http://127.0.0.1:11434/v1/models"
+    },
+    "llama-server": {
+      "endpoint": "host.docker.internal:8080",
+      "probe_url": "http://127.0.0.1:8080/v1/models"
+    },
+    "exo": {
+      "endpoint": "host.docker.internal:52415",
+      "probe_url": "http://127.0.0.1:52415/v1/models",
+      "experimental": true
+    }
+  },
+  "models": {
+    "qwen3.8:27b-mlx": { "ollama": "qwen3.8:27b-mlx" },
+    "gemma4:12b": { "ollama": "gemma4:12b" },
+    "gpt-oss:20b": { "ollama": "gpt-oss:20b", "llama-server": "gpt-oss-20b" },
+    "gpt-oss:120b": { "exo": "mlx-community/gpt-oss-120b-MXFP4-Q8" }
+  }
+}

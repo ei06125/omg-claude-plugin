@@ -3,7 +3,9 @@ name = "omg-claude-plugin"
 version = "0.1.0"
 description = "Development tooling for the omg Claude Code plugin"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "mcp>=2.2.0",
+]
 
 [dependency-groups]
 dev = [
@@ -22,10 +24,13 @@ package = false
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["tools", "tests"]
+pythonpath = ["tools", "tests", "sources"]
 bdd_features_base_dir = "tests/acceptance/features"
-addopts = "-m 'not claude_cli'"
-markers = ["claude_cli: needs an authenticated claude CLI and makes real model calls; not run in CI"]
+addopts = "-m 'not claude_cli and not sbx'"
+markers = [
+    "claude_cli: needs an authenticated claude CLI and makes real model calls; not run in CI",
+    "sbx: needs a real Docker sbx and a running model backend; not run in CI",
+]
 
 [tool.ruff]
 line-length = 88
