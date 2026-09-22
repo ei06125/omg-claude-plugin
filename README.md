@@ -87,7 +87,8 @@ uv run pre-commit install
 Layers, all using `.gitleaks.toml` as the single rule set:
 
 - pre-commit: `gitleaks` on staged changes, private-key and merge-conflict detection, whitespace and
-  end-of-file normalization, `rumdl` for the cybersecurity research, and `uv-lock` (keeps `uv.lock` in sync).
+  end-of-file normalization, `rumdl` with a 120-character limit for the cybersecurity research, and `uv-lock`
+  (keeps `uv.lock` in sync).
 - GitHub Actions (`.github/workflows/`): separate security, quality, and test workflows run for pull
   requests and pushes to `main`. Gitleaks scans the complete history; quality runs the remaining
   pre-commit hooks; tests runs `uv run pytest`.

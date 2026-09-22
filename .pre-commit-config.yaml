@@ -14,13 +14,6 @@ repos:
       - id: trailing-whitespace
         name: Remove trailing whitespace
 
-  - repo: https://github.com/rvben/rumdl-pre-commit
-    rev: 8e6c4fb67349871728da933556d5f329fe8062ea # frozen: v0.2.75
-    hooks:
-      - id: rumdl
-        name: Lint cybersecurity research Markdown
-        files: ^\.agents/Governance/cybersecurity-research\.md$
-
   - repo: https://github.com/gitleaks/gitleaks
     rev: 83d9cd684c87d95d656c1458ef04895a7f1cbd8e # frozen: v8.30.1
     hooks:
@@ -60,3 +53,8 @@ repos:
         entry: uv run rumdl check
         language: system
         types: [markdown]
+      - id: rumdl-research-line-length
+        name: rumdl - Cybersecurity research line length
+        entry: uv run rumdl check --extend-enable MD013
+        language: system
+        files: ^\.agents/Governance/cybersecurity-research\.md$
