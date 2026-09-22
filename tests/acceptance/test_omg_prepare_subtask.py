@@ -17,6 +17,21 @@ def read_skill(repo_root, name):
     return {"front": yaml.safe_load(front), "body": body.strip()}
 
 
+def flat(skill):
+    """The skill body with whitespace collapsed, for regex checks that may span a line wrap."""
+    return re.sub(r"\s+", " ", skill["body"])
+
+
+def gh_json(*args):
+    out = subprocess.run(
+        ["gh", *args, "--json", "number,title,body"],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return json.loads(out.stdout)
+
+
 # --- Given -------------------------------------------------------------------------------------------------
 
 
@@ -30,20 +45,15 @@ def given_skill(repo_root, name):
     return read_skill(repo_root, name)
 
 
-@given(
-    "a disposable SUBTASK issue with a mechanically checkable criterion",
-    target_fixture="subtask",
-)
-def given_disposable_issue(tmp_path):
+@given("a disposable TASK issue with two goals", target_fixture="task")
+def given_disposable_task(tmp_path):
     assert shutil.which("gh"), "gh CLI not found on PATH"
     assert shutil.which("claude"), "claude CLI not found on PATH"
-    workdir = tmp_path / "work"
-    workdir.mkdir()
-    subprocess.run(["git", "init", "-q", "-b", "main"], cwd=workdir, check=True)
-    (workdir / "greeting.txt").write_text("hello\n")
     body = (
-        "## Objective\n\nChange the content of `greeting.txt` to exactly the line `done`.\n\n"
-        "## Acceptance criteria\n\n- [ ] `greeting.txt` contains exactly the line `done`.\n"
+        "## Objective\n\nDisposable prepare-subtask fixture.\n\n"
+        "## Acceptance criteria\n\n"
+        "- [ ] First disposable goal.\n"
+        "- [ ] Second disposable goal.\n"
     )
     created = subprocess.run(
         [
@@ -53,7 +63,7 @@ def given_disposable_issue(tmp_path):
             "-R",
             REPO,
             "--title",
-            "[06_SUBTASKS] SUBTASK-TEST: disposable prepare-subtask fixture",
+            "[05_TASKS] TASK-TEST: disposable prepare-subtask fixture",
             "--body",
             body,
             "--label",
@@ -64,7 +74,36 @@ def given_disposable_issue(tmp_path):
         check=True,
     )
     number = created.stdout.strip().rsplit("/", 1)[-1]
-    yield {"number": number, "workdir": workdir, "file": workdir / "greeting.txt"}
+    workdir = tmp_path / "work"
+    workdir.mkdir()
+    yield {"number": number, "workdir": workdir}
+    created_subtasks = gh_json(
+        "issue",
+        "list",
+        "-R",
+        REPO,
+        "--search",
+        f'"prepare-subtask fixture" in:body "{number}"',
+        "--state",
+        "all",
+    )
+    for sub in created_subtasks:
+        if sub["number"] != int(number) and f"issues/{number}" in sub["body"]:
+            subprocess.run(
+                [
+                    "gh",
+                    "issue",
+                    "close",
+                    "-R",
+                    REPO,
+                    str(sub["number"]),
+                    "--comment",
+                    "Disposable test fixture; closing.",
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
     subprocess.run(
         [
             "gh",
@@ -86,16 +125,10 @@ def given_disposable_issue(tmp_path):
 
 
 @when(parsers.parse('I run "{command}" on that issue'), target_fixture="result")
-def when_run_prepare_subtask(repo_root, subtask, command):
+def when_run_prepare_subtask(repo_root, task, command):
     return subprocess.run(
-        [
-            "claude",
-            "--plugin-dir",
-            str(repo_root),
-            "-p",
-            f"{command} {subtask['number']} {subtask['workdir']}",
-        ],
-        cwd=subtask["workdir"],
+        ["claude", "--plugin-dir", str(repo_root), "-p", f"{command} {task['number']}"],
+        cwd=task["workdir"],
         capture_output=True,
         text=True,
     )
@@ -124,90 +157,86 @@ def then_names_invocation(skill, command):
         'its instructions require refusing an issue whose title is not tagged "{tag}"'
     )
 )
-def then_refuses_non_subtask(skill, tag):
+def then_refuses_non_task(skill, tag):
     assert re.search(r"\brefuse\b", skill["body"], re.I)
     assert tag in skill["body"]
 
 
 @then(
-    "its instructions require the invoking agent to write the recipe from the issue's Objective and Acceptance criteria"
+    parsers.parse(
+        'its instructions require finding the highest existing "{pattern}" number first'
+    )
 )
-def then_agent_writes_recipe(skill):
-    body = skill["body"]
-    assert "Objective" in body
-    assert "Acceptance criteria" in body
-    assert re.search(r"writes? the recipe", body, re.I)
+def then_finds_highest(skill, pattern):
+    assert re.search(r"highest existing", skill["body"], re.I)
+    assert pattern in skill["body"]
 
 
-@then("its instructions state that recipe authoring is not delegated")
-def then_recipe_not_delegated(skill):
-    assert re.search(r"not delegat\w*", skill["body"], re.I)
+@then("its instructions state that new numbers never repeat one already used")
+def then_numbers_unique(skill):
+    assert re.search(r"never repeat one already used", skill["body"], re.I)
 
 
-@then(parsers.parse("its instructions require the recipe to be {trait}"))
-def then_recipe_trait(skill, trait):
-    assert trait.lower() in skill["body"].lower()
+@then("its instructions require writing and creating one issue per goal")
+def then_one_issue_per_goal(skill):
+    assert re.search(r"for each goal", skill["body"], re.I)
+    assert re.search(r"one issue", skill["body"], re.I)
 
 
-@then(
-    parsers.parse('its instructions name "{a}" and "{b}" as the acting model choices')
-)
-def then_model_choices(skill, a, b):
-    assert a in skill["body"]
-    assert b in skill["body"]
-
-
-@then(parsers.parse('its instructions default the acting model to "{model}"'))
-def then_default_model(skill, model):
-    assert re.search(
-        rf"default\w*.*{re.escape(model)}", skill["body"], re.I
-    ) or re.search(rf"{re.escape(model)}.*default\w*", skill["body"], re.I)
+@then("its instructions state that writing it is never delegated")
+def then_not_delegated(skill):
+    assert re.search(r"never delegate", skill["body"], re.I)
 
 
 @then(
     parsers.parse(
-        'its instructions require the delegate "{arg}" argument to list only what the recipe uses'
+        'its instructions require the "{section}" section to be verbatim and numbered'
     )
 )
-def then_commands_scoped(skill, arg):
-    assert arg in skill["body"]
-    assert re.search(r"only what the recipe uses", skill["body"], re.I)
+def then_instructions_verbatim(skill, section):
+    body = flat(skill)
+    assert section in body
+    assert re.search(r"verbatim, numbered", body, re.I)
 
 
-@then(parsers.parse('its instructions forbid a wildcard in "{arg}"'))
-def then_forbid_wildcard(skill, arg):
-    assert arg in skill["body"]
-    assert re.search(r"never.*wildcard", skill["body"], re.I)
+@then("its instructions forbid a prose goal in that section")
+def then_forbid_prose(skill):
+    assert re.search(r"never a prose goal", skill["body"], re.I)
 
 
-@then(
-    "its instructions require a deterministic command when the acceptance criteria allow one"
-)
-def then_prefer_deterministic(skill):
-    assert re.search(r"deterministic (command|check|gate)", skill["body"], re.I)
+@then("its instructions require linking each SUBTASK as a native sub-issue of the TASK")
+def then_native_link(skill):
+    body = flat(skill)
+    assert re.search(r"native sub-issue", body, re.I)
+    assert "addSubIssue" in body
 
 
-@then(
-    "its instructions require a same-tier reviewer model only when a deterministic command cannot decide it"
-)
-def then_reviewer_fallback(skill):
-    body = re.sub(r"\s+", " ", skill["body"])
-    assert re.search(r"same[- ]tier reviewer", body, re.I)
-    assert re.search(r"only when", body, re.I)
-
-
-@then("its instructions bound the number of rounds")
-def then_bounded_rounds(skill):
-    assert re.search(r"\bmax_rounds\b", skill["body"])
+@then("its instructions require the sub-issue count to equal the goal count")
+def then_count_check(skill):
+    assert re.search(r"sub_issues", skill["body"])
+    assert re.search(r"equal(s|ing)? the (number|goal) ", flat(skill), re.I)
 
 
 @then(
-    "its instructions require reporting failure after the last round instead of a guessed fix"
+    parsers.parse(
+        'its instructions require every SUBTASK to have a numbered "{section}" section'
+    )
 )
-def then_honest_failure(skill):
-    body = skill["body"]
-    assert re.search(r"last round", body, re.I)
-    assert re.search(r"never guess", body, re.I)
+def then_every_subtask_checked(skill, section):
+    body = flat(skill)
+    assert re.search(rf"every.*created.*subtask.*{section}", body, re.I)
+
+
+@then(parsers.parse('its instructions require reporting to the person "{tool}" names'))
+def then_report_whoami(skill, tool):
+    assert tool in skill["body"]
+    assert re.search(r"tell the person", skill["body"], re.I)
+
+
+@then("its instructions forbid retrying or guessing a fix on failure")
+def then_no_retry(skill):
+    assert re.search(r"do not retry", skill["body"], re.I)
+    assert re.search(r"do not guess", skill["body"], re.I)
 
 
 @then(parsers.parse('its instructions forbid running "{a}", "{b}" and "{c}"'))
@@ -221,36 +250,64 @@ def then_forbid_pr(skill):
     assert re.search(r"never open a pull request", skill["body"], re.I)
 
 
-@then("its instructions forbid ticking an acceptance box in the issue")
+@then("its instructions forbid ticking a box in the TASK issue")
 def then_forbid_ticking(skill):
-    assert re.search(r"never tick.*acceptance (box|checkbox)", skill["body"], re.I)
+    assert re.search(r"never tick a box in the TASK issue", skill["body"], re.I)
 
 
 # --- Then: real run -------------------------------------------------------------------------------------------
 
 
-@then("only the file the criterion describes changed")
-def then_only_file_changed(result, subtask):
+def created_subtasks(task):
+    return gh_json(
+        "issue",
+        "list",
+        "-R",
+        REPO,
+        "--search",
+        f'"[06_SUBTASKS]" in:body {task["number"]}',
+        "--state",
+        "all",
+    )
+
+
+@then("exactly two linked SUBTASK issues were created")
+def then_two_subtasks(result, task):
     assert result.returncode == 0, result.stdout + result.stderr
-    others = [
-        p
-        for p in subtask["workdir"].rglob("*")
-        if p.is_file() and ".git" not in p.parts and p != subtask["file"]
-    ]
-    assert others == [], f"unexpected files changed: {others}"
-
-
-@then("the deterministic gate for that criterion passes")
-def then_gate_passes(subtask):
-    assert subtask["file"].read_text().strip() == "done"
-
-
-@then("no commit was made in the working directory")
-def then_no_commit(subtask):
-    log = subprocess.run(
-        ["git", "log", "--oneline"],
-        cwd=subtask["workdir"],
+    subs = subprocess.run(
+        ["gh", "api", f"repos/{REPO}/issues/{task['number']}/sub_issues", "--jq", "."],
         capture_output=True,
         text=True,
+        check=True,
     )
-    assert log.stdout.strip() == ""
+    task["sub_issues"] = json.loads(subs.stdout)
+    assert len(task["sub_issues"]) == 2, task["sub_issues"]
+
+
+@then(parsers.parse('each has a numbered "{section}" section'))
+def then_each_has_instructions(task, section):
+    for sub in task["sub_issues"]:
+        body = subprocess.run(
+            [
+                "gh",
+                "issue",
+                "view",
+                str(sub["number"]),
+                "-R",
+                REPO,
+                "--json",
+                "body",
+                "-q",
+                ".body",
+            ],
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout
+        assert f"## {section}" in body
+        assert re.search(r"^\s*1\.", body, re.M)
+
+
+@then("the report names Pedro")
+def then_names_pedro(result):
+    assert "Pedro" in result.stdout
