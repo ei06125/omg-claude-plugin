@@ -138,6 +138,22 @@ git ls-remote https://github.com/<owner>/<repo> 'refs/tags/<tag>*'   # commit SH
 docker buildx imagetools inspect <image>:<tag> | head -3             # image index digest
 ```
 
+## Table of contents
+
+The cybersecurity research uses a re-runnable `markdown-toc` block. Add an empty
+`<!-- toc -->` marker where the TOC should appear, then regenerate it in place:
+
+```bash
+npx markdown-toc -i --maxdepth 3 --bullets "-" .agents/Governance/cybersecurity-research.md
+```
+
+`--bullets "-"` is required so the generated list matches the `rumdl` MD004 style
+(this repo lints markdown with `-` bullets). The tool only lists headings *after*
+the marker, so place the marker above the content you want indexed (e.g. under the
+title, before `## Abstract`). `--maxdepth` controls heading depth (`2` for top-level
+sections only). The block is wrapped in `<!-- toc -->` / `<!-- tocstop -->`; re-run
+the command to refresh.
+
 ## Manifest notes
 
 - `skills` and `commands` accept directories.

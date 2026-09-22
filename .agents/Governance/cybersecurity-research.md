@@ -14,6 +14,42 @@ evidence-based and layered: governance defines risk and accountability; engineer
 throughout the lifecycle; platforms enforce least privilege and isolation; operations continuously validate controls;
 and certifications provide role-oriented knowledge signals but do not substitute for demonstrated competence.
 
+## Table of Contents
+
+<!-- toc -->
+
+- [1. Introduction](#1-introduction)
+  - [1.1 Method and scope](#11-method-and-scope)
+- [2. Background and body of knowledge](#2-background-and-body-of-knowledge)
+  - [2.1 Security objectives and risk](#21-security-objectives-and-risk)
+  - [2.2 OWASP: awareness, requirements, and maturity](#22-owasp-awareness-requirements-and-maturity)
+  - [2.3 ISACA, ISC2, CompTIA, and professional knowledge](#23-isaca-isc2-comptia-and-professional-knowledge)
+  - [2.4 Interpreting the supplied certification image](#24-interpreting-the-supplied-certification-image)
+  - [2.5 Assurance, evidence, and control operation](#25-assurance-evidence-and-control-operation)
+- [3. Application-security testing](#3-application-security-testing)
+  - [3.1 SAST](#31-sast)
+  - [3.2 DAST](#32-dast)
+  - [3.3 Complementary techniques](#33-complementary-techniques)
+  - [3.4 CI/CD placement and governance](#34-cicd-placement-and-governance)
+- [4. Operating-system and workload security](#4-operating-system-and-workload-security)
+  - [4.1 OS hardening](#41-os-hardening)
+  - [4.2 Linux namespaces](#42-linux-namespaces)
+  - [4.3 cgroups](#43-cgroups)
+  - [4.4 Linux capabilities](#44-linux-capabilities)
+- [5. State of the art](#5-state-of-the-art)
+  - [5.1 From periodic compliance to continuous, evidence-based assurance](#51-from-periodic-compliance-to-continuous-evidence-based-assurance)
+  - [5.2 Software supply-chain assurance](#52-software-supply-chain-assurance)
+  - [5.3 Cloud-native isolation and identity](#53-cloud-native-isolation-and-identity)
+  - [5.4 Memory safety, fuzzing, and safer defaults](#54-memory-safety-fuzzing-and-safer-defaults)
+  - [5.5 AI-assisted security](#55-ai-assisted-security)
+  - [5.6 Remaining research and practice gaps](#56-remaining-research-and-practice-gaps)
+- [6. Integrated governance model](#6-integrated-governance-model)
+- [7. Conclusion](#7-conclusion)
+- [References](#references)
+- [Source-quality note](#source-quality-note)
+
+<!-- tocstop -->
+
 ## 1. Introduction
 
 Digital systems combine first-party code, open-source dependencies, cloud services, identities, operating systems,
@@ -282,10 +318,9 @@ Security implications include:
 - Restrict unprivileged user namespaces where local threat and application compatibility justify it; this is a
   platform-specific risk decision, not a universal rule.
 
-### 4.3 cgroups, not “ccgroups”
+### 4.3 cgroups
 
-The Linux facility is **cgroups**, short for control groups. There is no standard Linux isolation primitive named
-“ccgroups.” cgroups organise processes hierarchically and account for or constrain resources such as CPU, memory,
+The Linux facility is **cgroups**, short for control groups. cgroups organise processes hierarchically and account for or constrain resources such as CPU, memory,
 process count, and I/O. cgroup v2 provides a unified hierarchy and delegation model [16].
 
 cgroups chiefly protect availability and support accounting. Memory, PID, CPU, and I/O limits can reduce noisy-neighbour
@@ -297,14 +332,13 @@ Safe governance requires version-aware delegation, limits for every workload, mo
 out-of-memory events, protection of the cgroup filesystem, and testing under pressure. Limits must be coordinated with
 application timeouts, autoscaling, and service-level objectives.
 
-### 4.4 Linux capabilities and `CAP_SYS_ADMIN`
+### 4.4 Linux capabilities
 
 Linux capabilities split traditional root privilege into per-thread units that may be independently enabled or removed.
 Processes have permitted, effective, inheritable, ambient, and bounding sets; executable files may carry capability
 metadata. This is finer-grained than an all-or-nothing root identity but still easy to misconfigure [17].
 
-There is no generic Linux capability named `CAP_ADMIN`. The common intended term is **`CAP_SYS_ADMIN`**; other
-administrative capabilities include `CAP_NET_ADMIN`, `CAP_MAC_ADMIN`, and `CAP_AUDIT_CONTROL`.
+The common administrative capabilities include `CAP_SYS_ADMIN`, `CAP_NET_ADMIN`, `CAP_MAC_ADMIN`, and `CAP_AUDIT_CONTROL`.
 
 `CAP_SYS_ADMIN` is deliberately described by the Linux manual as overloaded. It gates a wide range of operations
 including many mount and namespace operations, `setns()` in relevant cases, privileged filesystem and device operations,
