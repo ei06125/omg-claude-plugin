@@ -2,8 +2,17 @@
 *.bak
 .claude/settings.local.json
 .cache/
+.coverage
+.coverage.*
+.env
 .venv/
 .gitlab-ci-local/
 __pycache__/
 .pytest_cache/
+.ruff_cache/
+*.egg-info/
+build/
+coverage.xml
+dist/
 gitleaks-report.json
+htmlcov/

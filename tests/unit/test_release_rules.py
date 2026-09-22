@@ -36,7 +36,9 @@ class TestNextVersion:
         repo.commit()
         assert next_of(repo) == ("0.2.0", "minor")
 
-    def test_editing_an_accepted_spec_without_changing_status_is_not_a_release(self, repo):
+    def test_editing_an_accepted_spec_without_changing_status_is_not_a_release(
+        self, repo
+    ):
         repo.write_spec("omg-hello", "Accepted", summary="Reworded summary.")
         repo.commit()
         assert next_of(repo) is None
@@ -95,7 +97,9 @@ class TestNextVersion:
         repo.write_spec("omg-hello", "Accepted", breaking=True)
         repo.commit("Initial")
         repo.tag("v0.2.0")
-        repo.write_spec("omg-hello", "Accepted", breaking=True, summary="Reworded summary.")
+        repo.write_spec(
+            "omg-hello", "Accepted", breaking=True, summary="Reworded summary."
+        )
         repo.commit()
         assert next_of(repo) is None
 
@@ -134,7 +138,9 @@ class TestParsing:
         ],
     )
     def test_spec_status(self, status_line, expected):
-        assert release.spec_status(f"# Spec\n\n- **Status:** {status_line}\n") == expected
+        assert (
+            release.spec_status(f"# Spec\n\n- **Status:** {status_line}\n") == expected
+        )
 
     def test_a_spec_without_a_status_has_none(self):
         assert release.spec_status("# Spec\n\nNo header here.\n") is None

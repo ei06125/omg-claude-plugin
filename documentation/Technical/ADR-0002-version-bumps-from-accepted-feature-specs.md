@@ -40,9 +40,11 @@ Facts that shape the rule:
 The prefix of each commit (`feat`, `fix`, `!`) decides the bump.
 
 Pros:
+
 - Mature tooling for computing the version, and a familiar convention.
 
 Cons:
+
 - It infers impact from a prefix, which the governance warns against.
 - It depends on every author, and on the merge style, to produce the right prefix: one wrong prefix mis-versions a release.
 - It needs a title or commit-message check to work at all.
@@ -53,12 +55,14 @@ Cons:
 The rules below use the spec headers and the paths that changed.
 
 Pros:
+
 - Follows the compatibility policy: a new accepted capability is a backward-compatible addition.
 - Deterministic: it compares file contents between the last tag and the release commit, with no message parsing.
 - The release signal is the owner's acceptance, which the workflow already requires.
 - Removes the need for a commit-title check and for `python-semantic-release`.
 
 Cons:
+
 - Custom logic to write and test.
 - Depends on spec discipline: a feature merged without a spec is only a patch.
 - Breaking changes need an explicit human marker, because a spec diff cannot show them.
@@ -68,9 +72,11 @@ Cons:
 The owner edits `plugin.json` and tags by hand.
 
 Pros:
+
 - Nothing to build.
 
 Cons:
+
 - Easy to forget, and it does not scale past a few releases.
 - It gives up the review trail the release pull request provides.
 
@@ -80,9 +86,11 @@ Cons:
 a new version.
 
 Pros:
+
 - No bumping at all, and updates are always distinguishable.
 
 Cons:
+
 - Users and the owner get no meaningful version to reason about, and there is no compatibility signal.
 - Not verified here: whether an explicit version that never changes actually blocks updates.
 
@@ -99,6 +107,7 @@ commit.
 | Only docs, tests, CI, tooling, or governance changed | No release |
 
 Rules:
+
 - When several rows apply, the highest wins. A release bumps once per release, not once per feature, so two
   features accepted before the same release still give a single MINOR bump.
 - `Status` has three values: `Draft`, `In development` and `Accepted`. The owner sets `Accepted`, as part of the

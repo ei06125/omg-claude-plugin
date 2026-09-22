@@ -52,7 +52,11 @@ class FakeGitHub:
         return pr
 
     def posts_to_pulls(self):
-        return [r for r in self.requests if r["method"] == "POST" and r["path"].endswith("/pulls")]
+        return [
+            r
+            for r in self.requests
+            if r["method"] == "POST" and r["path"].endswith("/pulls")
+        ]
 
     def _view(self, pr):
         return {
@@ -85,7 +89,13 @@ class FakeGitHub:
 
             def route(self, method):
                 path = self.path.split("?")[0]
-                fake.requests.append({"method": method, "path": path, "auth": self.headers.get("Authorization")})
+                fake.requests.append(
+                    {
+                        "method": method,
+                        "path": path,
+                        "auth": self.headers.get("Authorization"),
+                    }
+                )
                 prefix = f"/repos/{fake.repo}"
                 if not path.startswith(prefix):
                     return self.reply(404, {"message": "Not Found"})
@@ -101,7 +111,9 @@ class FakeGitHub:
                     return self.reply(200, fake._view(target))
                 comment = re.fullmatch(r"/issues/(\d+)/comments", rest)
                 if method == "POST" and comment:
-                    fake.prs[int(comment.group(1)) - 1]["comments"].append(self.body().get("body", ""))
+                    fake.prs[int(comment.group(1)) - 1]["comments"].append(
+                        self.body().get("body", "")
+                    )
                     return self.reply(201, {})
                 return self.reply(404, {"message": "Not Found"})
 
@@ -109,7 +121,13 @@ class FakeGitHub:
                 if not fake.pr_creation_allowed:
                     return self.reply(403, {"message": NOT_PERMITTED})
                 if any(pr["head"] == payload["head"] for pr in fake.open_prs()):
-                    return self.reply(422, {"message": "Validation Failed", "errors": [{"message": "A pull request already exists."}]})
+                    return self.reply(
+                        422,
+                        {
+                            "message": "Validation Failed",
+                            "errors": [{"message": "A pull request already exists."}],
+                        },
+                    )
                 pr = fake.seed(payload["head"], payload["base"], payload["title"])
                 pr["body"] = payload.get("body", "")
                 return self.reply(201, fake._view(pr))
