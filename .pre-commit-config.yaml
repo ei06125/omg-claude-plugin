@@ -32,3 +32,31 @@ repos:
     hooks:
       - id: uv-lock
         name: Keep uv.lock in sync with pyproject.toml
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: 2eeb5678de71a00c0902cbda7105d328432f72cb # frozen: v0.16.8
+    hooks:
+      - id: ruff-check
+        name: Ruff - Python linting
+        args: [--fix]
+      - id: ruff-format
+        name: Ruff - Python formatting
+
+  - repo: local
+    hooks:
+      - id: shellcheck
+        name: ShellCheck - shell linting
+        entry: uv run shellcheck
+        language: system
+        types: [shell]
+        require_serial: true
+      - id: yamllint
+        name: yamllint - YAML linting
+        entry: uv run yamllint
+        language: system
+        types: [yaml]
+      - id: rumdl
+        name: rumdl - Markdown linting
+        entry: uv run rumdl check
+        language: system
+        types: [markdown]

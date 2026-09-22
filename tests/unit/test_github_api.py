@@ -28,7 +28,9 @@ class TestOpenReleasePullRequests:
         github.seed("feature/search")
         github.seed("release/not-a-version")
         github.seed("release/v0.1.1", state="closed")
-        assert api.open_release_pull_requests() == {"release/v0.2.0": release_pr["number"]}
+        assert api.open_release_pull_requests() == {
+            "release/v0.2.0": release_pr["number"]
+        }
 
     def test_pull_requests_from_forks_are_ignored(self, api, github):
         github.seed("release/v0.9.0", head_repo="someone/omg")
@@ -41,14 +43,25 @@ class TestOpenReleasePullRequests:
 
 class TestCreatePullRequest:
     def test_it_creates_the_pull_request(self, api, github):
-        number = api.create_pull_request("release/v0.2.0", "main", "chore(release): v0.2.0", "Body text.")
+        number = api.create_pull_request(
+            "release/v0.2.0", "main", "chore(release): v0.2.0", "Body text."
+        )
         [pull_request] = github.open_prs()
         assert number == pull_request["number"]
-        assert (pull_request["head"], pull_request["base"], pull_request["body"]) == ("release/v0.2.0", "main", "Body text.")
+        assert (pull_request["head"], pull_request["base"], pull_request["body"]) == (
+            "release/v0.2.0",
+            "main",
+            "Body text.",
+        )
 
-    def test_a_repository_that_blocks_workflow_pull_requests_is_not_configured(self, api, github):
+    def test_a_repository_that_blocks_workflow_pull_requests_is_not_configured(
+        self, api, github
+    ):
         github.pr_creation_allowed = False
-        with pytest.raises(release.NotConfigured, match="Allow GitHub Actions to create and approve pull requests"):
+        with pytest.raises(
+            release.NotConfigured,
+            match="Allow GitHub Actions to create and approve pull requests",
+        ):
             api.create_pull_request("release/v0.2.0", "main", "title", "body")
 
     def test_a_validation_failure_is_a_release_error(self, api, github):

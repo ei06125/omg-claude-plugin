@@ -38,11 +38,13 @@ Implemented as `tools/ci-local.sh`. It clones the repository, overlays the curre
 `gitlab-ci-local` against Docker.
 
 Pros:
+
 - Cheap: one `brew install`, seconds per run, no server to maintain.
 - Verified in practice: both jobs pass on the clean repo and both fail on planted fake secrets.
 - Runs the exact `image:` and script definitions used on GitLab.com.
 
 Cons:
+
 - It re-implements the runner and there is no GitLab server, so only JSON-schema validation of the CI file is
   done. `workflow:rules`, merge-request pipelines, cache keys and predefined-variable behaviour are not exercised.
 - It exported no report for the failed job, so `artifacts: when: on_failure` is unverified.
@@ -55,6 +57,7 @@ Cons:
 A trimmed version of the reference stack.
 
 Pros:
+
 - Real GitLab behaviour, including `workflow:rules`, merge-request pipelines, artifacts, cache and GitLab's own
   CI Lint.
 - A safe place for negative tests: fake secrets can be pushed without touching GitLab.com history.
@@ -62,6 +65,7 @@ Pros:
 - Reusable for other repositories.
 
 Cons:
+
 - Heavy: multi-GB images, several GB of RAM and a first boot of several minutes.
 - Manual setup that the compose file does not contain: creating the `gitlab` network, a `gitlab.example.com` hosts
   entry (needs sudo), runner registration, retrieving the initial root password, and creating and pushing a
@@ -78,10 +82,12 @@ Cons:
 Push a branch to the private project and read the pipeline.
 
 Pros:
+
 - Highest fidelity: real runners, real GitLab version, real merge-request semantics.
 - No infrastructure to build or maintain.
 
 Cons:
+
 - Consumes shared-runner minutes on a private project.
 - Planted-secret tests would leave fake credentials in the GitLab.com repository, so they should stay local.
 - Slower feedback loop and the network is required.
@@ -132,6 +138,7 @@ Drop everything specific to the reference website project: `opentofu`, `website`
 `integration-tests`, and its Dockerfile, `spec/`, `infra/` and `website/` directories.
 
 Requirements:
+
 - Write a minimal compose file for this repository. Do not copy the course file into it.
 - Bind published ports to `127.0.0.1`, pin images by digest, and prefer an official GitLab image if it supports
   the host architecture.
@@ -140,12 +147,14 @@ Requirements:
 ## Verification status
 
 Verified locally:
+
 - Both CI jobs pass on the clean repository and fail on planted fake secrets (a GitHub token, a `*_PAT`
   assignment and a private-key header).
 - The uv image on Docker Hub matches the pinned digest.
 - The host had ample resources for Option 2 (8 CPUs, about 33 GB RAM, free ports 80, 443 and 2222).
 
 Not verified:
+
 - Any pipeline on GitLab.com. The result of the pipeline triggered by the first push to `main` has not been
   reviewed.
 - `artifacts: when: on_failure`, `workflow:rules` and merge-request pipelines.

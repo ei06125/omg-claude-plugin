@@ -48,10 +48,14 @@ def publish(world, *extra):
     return run_script(
         world,
         "publish",
-        "--remote", "origin",
-        "--target", "main",
-        "--github-repo", github.repo,
-        "--api-url", github.url,
+        "--remote",
+        "origin",
+        "--target",
+        "main",
+        "--github-repo",
+        github.repo,
+        "--api-url",
+        github.url,
         *extra,
     )
 
@@ -107,7 +111,11 @@ def given_already_proposed(world, version):
     assert f"release/v{version}" in world["origin"].release_branches()
 
 
-@given(parsers.parse('the release job proposed "{version}" while pull requests were not allowed'))
+@given(
+    parsers.parse(
+        'the release job proposed "{version}" while pull requests were not allowed'
+    )
+)
 def given_proposed_without_pull_request(world, version):
     world["github"].pr_creation_allowed = False
     result = publish(world)
@@ -164,14 +172,18 @@ def then_proposed(world, version):
     assert result.returncode == 0, result.stdout + result.stderr
     branch = f"release/v{version}"
     assert origin.release_branches() == {branch}
-    assert origin.git("rev-parse", f"{branch}~1") == world["repo"].git("rev-parse", "HEAD")
+    assert origin.git("rev-parse", f"{branch}~1") == world["repo"].git(
+        "rev-parse", "HEAD"
+    )
     assert origin.changed_files(branch, f"{branch}~1") == {MANIFEST}
     assert f'"version": "{version}"' in origin.file_at(branch, MANIFEST)
     [pull_request] = github.open_prs()
     assert pull_request["head"] == branch
     assert pull_request["base"] == "main"
     assert pull_request["title"] == f"chore(release): v{version}"
-    assert {request["auth"] for request in github.requests} == {f"Bearer {world['token']}"}
+    assert {request["auth"] for request in github.requests} == {
+        f"Bearer {world['token']}"
+    }
 
 
 @then("no release is proposed")
@@ -209,7 +221,9 @@ def then_tagged(world, tag):
     assert world["result"].returncode == 0, world["result"].stderr
     assert tag in origin.tags()
     assert origin.object_type(f"refs/tags/{tag}") == "tag"
-    assert origin.git("rev-parse", f"{tag}^{{commit}}") == world["repo"].git("rev-parse", "HEAD")
+    assert origin.git("rev-parse", f"{tag}^{{commit}}") == world["repo"].git(
+        "rev-parse", "HEAD"
+    )
 
 
 @then(parsers.parse('the workflow is told about the tag "{tag}"'))
