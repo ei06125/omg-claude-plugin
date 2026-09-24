@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "omg": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--project",
+        "${CLAUDE_PLUGIN_ROOT}",
+        "python",
+        "-m",
+        "omg_delegate.server"
+      ],
+      "env": {
+        "PYTHONPATH": "${CLAUDE_PLUGIN_ROOT}/sources"
+      }
+    }
+  }
+}
